@@ -9,7 +9,7 @@ namespace AssesmentIndofoodNet
     public partial class Form1 : Form
     {
         // Deklarasi Komponen UI
-        private Label lblTotalMesin, lblPerluMaint, lblRataRh;
+        private Label lblTotalMesin, lblPerluMaint, lblRataRh, lblBadgeNotif;
         private Button btnStart, btnStop;
         private Button btnProsesMaint, btnTambah, btnEdit, btnHapus; 
         private DataGridView dgvMesin; 
@@ -22,17 +22,14 @@ namespace AssesmentIndofoodNet
 
         public Form1()
         {
-            // 1. Inisialisasi Koneksi
             dbConn = new DbConnection();
-            
-            // 2. Jalankan Auto-Migrate untuk memastikan tabel & SP ada
             dbConn.AutoMigrate(); 
 
-            // 3. Setup Tampilan dan Muat Data
             SetupUI();
             LoadDataMesin();
             SetupTimer(); 
             UpdateStatistik(); 
+            UpdateBadgeNotif(); // Hitung badge notifikasi saat aplikasi pertama dibuka
         }
 
         // ==========================================
@@ -45,22 +42,18 @@ namespace AssesmentIndofoodNet
             this.StartPosition = FormStartPosition.CenterScreen; 
             this.BackColor = Color.WhiteSmoke;
 
-            // Label Statistik Header
             lblTotalMesin = new Label() { Text = "Total Mesin: 0", Location = new Point(20, 20), AutoSize = true, Font = new Font("Arial", 11, FontStyle.Bold) };
             lblPerluMaint = new Label() { Text = "Perlu Maint: 0", Location = new Point(200, 20), AutoSize = true, Font = new Font("Arial", 11, FontStyle.Bold) };
             lblRataRh = new Label() { Text = "Rata2 RH: 0", Location = new Point(380, 20), AutoSize = true, Font = new Font("Arial", 11, FontStyle.Bold) };
 
-            // Tombol Simulasi
             btnStart = new Button() { Text = "Start Simulasi", Location = new Point(20, 60), Size = new Size(120, 35), BackColor = Color.LightGreen };
             btnStop = new Button() { Text = "Stop / Reset", Location = new Point(150, 60), Size = new Size(120, 35), BackColor = Color.LightCoral };
             
-            // Tombol Aksi & CRUD
             btnProsesMaint = new Button() { Text = "🔧 Proses Maint.", Location = new Point(480, 60), Size = new Size(130, 35), BackColor = Color.Plum, Font = new Font("Arial", 9, FontStyle.Bold) };
             btnTambah = new Button() { Text = "+ Tambah", Location = new Point(650, 60), Size = new Size(90, 35), BackColor = Color.LightBlue };
             btnEdit = new Button() { Text = "Edit", Location = new Point(750, 60), Size = new Size(90, 35), BackColor = Color.LightYellow };
             btnHapus = new Button() { Text = "Hapus", Location = new Point(850, 60), Size = new Size(90, 35), BackColor = Color.LightPink };
 
-            // Event Listener Tombol
             btnStart.Click += BtnStart_Click;
             btnStop.Click += BtnStop_Click;
             btnProsesMaint.Click += BtnProsesMaint_Click;
@@ -68,7 +61,6 @@ namespace AssesmentIndofoodNet
             btnEdit.Click += BtnEdit_Click;
             btnHapus.Click += BtnHapus_Click;
 
-            // Tabel Data Mesin
             dgvMesin = new DataGridView();
             dgvMesin.Location = new Point(20, 110);
             dgvMesin.Size = new Size(930, 250);
@@ -77,23 +69,34 @@ namespace AssesmentIndofoodNet
             dgvMesin.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvMesin.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill; 
 
-            // Kotak Notifikasi
             Label lblNotif = new Label() { Text = "NOTIFIKASI TERBARU:", Location = new Point(20, 380), AutoSize = true, Font = new Font("Arial", 10, FontStyle.Bold) };
+            
+            // UI BARU: Badge Notifikasi (Indikator Merah)
+            lblBadgeNotif = new Label() { 
+                Text = "0", 
+                Location = new Point(195, 378), 
+                AutoSize = true, 
+                BackColor = Color.Red, 
+                ForeColor = Color.White, 
+                Font = new Font("Arial", 9, FontStyle.Bold),
+                Padding = new Padding(3)
+            };
+            lblBadgeNotif.Visible = false; // Sembunyikan jika angka 0
+
             lstNotifikasi = new ListBox();
             lstNotifikasi.Location = new Point(20, 410);
             lstNotifikasi.Size = new Size(930, 150);
             lstNotifikasi.Font = new Font("Arial", 10);
 
-            // Menempelkan semua komponen ke Form
             this.Controls.Add(lblTotalMesin); this.Controls.Add(lblPerluMaint); this.Controls.Add(lblRataRh);
             this.Controls.Add(btnStart); this.Controls.Add(btnStop); this.Controls.Add(btnProsesMaint);
             this.Controls.Add(btnTambah); this.Controls.Add(btnEdit); this.Controls.Add(btnHapus);
             this.Controls.Add(dgvMesin);
-            this.Controls.Add(lblNotif); this.Controls.Add(lstNotifikasi);
+            this.Controls.Add(lblNotif); this.Controls.Add(lblBadgeNotif); this.Controls.Add(lstNotifikasi);
         }
 
         // ==========================================
-        // 2. FUNGSI LOAD DATA MESIN
+        // 2. FUNGSI LOAD DATA & BADGE
         // ==========================================
         private void LoadDataMesin()
         {
@@ -113,10 +116,24 @@ namespace AssesmentIndofoodNet
                     UpdateStatistik();
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) { MessageBox.Show("Gagal memuat data: " + ex.Message); }
+        }
+
+        // FUNGSI BARU: Mengambil jumlah notifikasi belum dibaca dari database
+        private void UpdateBadgeNotif()
+        {
+            try
             {
-                MessageBox.Show("Gagal memuat data mesin: " + ex.Message, "Error Database", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                using (MySqlConnection conn = dbConn.GetConnection())
+                {
+                    string query = "SELECT COUNT(*) FROM tbl_notifikasi WHERE status_baca = 'Belum Dibaca'";
+                    int count = Convert.ToInt32(new MySqlCommand(query, conn).ExecuteScalar());
+                    
+                    lblBadgeNotif.Text = count.ToString();
+                    lblBadgeNotif.Visible = count > 0; // Jika ada notif, tampilkan badgenya
+                }
             }
+            catch { /* Silent Error */ }
         }
 
         // ==========================================
@@ -124,18 +141,13 @@ namespace AssesmentIndofoodNet
         // ==========================================
         private void BtnProsesMaint_Click(object sender, EventArgs e)
         {
-            if (dgvMesin.SelectedRows.Count == 0)
-            {
-                MessageBox.Show("Silakan pilih/klik mesin di tabel yang membutuhkan maintenance terlebih dahulu!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
+            if (dgvMesin.SelectedRows.Count == 0) return;
             DataGridViewRow row = dgvMesin.SelectedRows[0];
             string status = row.Cells["Status"].Value.ToString();
 
             if (status == "Normal")
             {
-                MessageBox.Show("Mesin ini berstatus Normal dan belum membutuhkan maintenance.", "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Mesin berstatus Normal.", "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -144,22 +156,21 @@ namespace AssesmentIndofoodNet
             string op = row.Cells["Operator"].Value.ToString();
             int rh = Convert.ToInt32(row.Cells["RH (jam)"].Value);
 
-            string jenisMaint = "Maintenance Ringan";
-            if (status == "[!!] Critical") jenisMaint = "Maintenance Berat";
-            else if (status == "[!] Warning") jenisMaint = "Maintenance Medium";
+            string jenisMaint = status == "[!!] Critical" ? "Maintenance Berat" : (status == "[!] Warning" ? "Maintenance Medium" : "Maintenance Ringan");
 
             using (FormTindakanMaintenance formMaint = new FormTindakanMaintenance(kode, nama, op, rh, jenisMaint))
             {
                 if (formMaint.ShowDialog() == DialogResult.OK)
                 {
-                    LoadDataMesin(); // Refresh data jika sukses
+                    LoadDataMesin(); 
+                    UpdateBadgeNotif(); // Kurangi/update badge setelah maintenance diselesaikan
                     lstNotifikasi.Items.Insert(0, $"{DateTime.Now.ToString("HH:mm:ss")} - [Info] {nama} maintenance selesai dilakukan.");
                 }
             }
         }
 
         // ==========================================
-        // 4. FUNGSI CRUD (TAMBAH, EDIT, HAPUS)
+        // 4. FUNGSI CRUD
         // ==========================================
         private void BtnTambah_Click(object sender, EventArgs e)
         {
@@ -167,16 +178,11 @@ namespace AssesmentIndofoodNet
             {
                 if (formInput.ShowDialog() == DialogResult.OK)
                 {
-                    try
+                    using (MySqlConnection conn = dbConn.GetConnection())
                     {
-                        using (MySqlConnection conn = dbConn.GetConnection())
-                        {
-                            string query = $"INSERT INTO tbl_mesin (kode_mesin, nama_mesin, flavor, operator, running_hour) VALUES ('{formInput.KodeMesin}', '{formInput.NamaMesin}', '{formInput.Flavor}', '{formInput.OperatorMesin}', {formInput.RunningHour})";
-                            new MySqlCommand(query, conn).ExecuteNonQuery();
-                            LoadDataMesin();
-                        }
+                        new MySqlCommand($"INSERT INTO tbl_mesin (kode_mesin, nama_mesin, flavor, operator, running_hour) VALUES ('{formInput.KodeMesin}', '{formInput.NamaMesin}', '{formInput.Flavor}', '{formInput.OperatorMesin}', {formInput.RunningHour})", conn).ExecuteNonQuery();
+                        LoadDataMesin();
                     }
-                    catch { MessageBox.Show("Gagal menyimpan data. Pastikan Kode Mesin unik!", "Error Database", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 }
             }
         }
@@ -191,16 +197,11 @@ namespace AssesmentIndofoodNet
             {
                 if (formInput.ShowDialog() == DialogResult.OK)
                 {
-                    try
+                    using (MySqlConnection conn = dbConn.GetConnection())
                     {
-                        using (MySqlConnection conn = dbConn.GetConnection())
-                        {
-                            string query = $"UPDATE tbl_mesin SET nama_mesin='{formInput.NamaMesin}', flavor='{formInput.Flavor}', operator='{formInput.OperatorMesin}', running_hour={formInput.RunningHour} WHERE kode_mesin='{kode}'";
-                            new MySqlCommand(query, conn).ExecuteNonQuery();
-                            LoadDataMesin();
-                        }
+                        new MySqlCommand($"UPDATE tbl_mesin SET nama_mesin='{formInput.NamaMesin}', flavor='{formInput.Flavor}', operator='{formInput.OperatorMesin}', running_hour={formInput.RunningHour} WHERE kode_mesin='{kode}'", conn).ExecuteNonQuery();
+                        LoadDataMesin();
                     }
-                    catch (Exception ex) { MessageBox.Show("Gagal update: " + ex.Message, "Error Database", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 }
             }
         }
@@ -209,29 +210,24 @@ namespace AssesmentIndofoodNet
         {
             if (dgvMesin.SelectedRows.Count == 0) return;
             string kode = dgvMesin.SelectedRows[0].Cells["Kode"].Value.ToString();
-            string nama = dgvMesin.SelectedRows[0].Cells["Nama"].Value.ToString();
-
-            if (MessageBox.Show($"Apakah Anda yakin ingin menghapus mesin {nama} ({kode})?\nSemua riwayat dan notifikasi juga akan terhapus.", "Konfirmasi Hapus", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (MessageBox.Show("Hapus data?", "Konfirmasi", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                try
+                using (MySqlConnection conn = dbConn.GetConnection())
                 {
-                    using (MySqlConnection conn = dbConn.GetConnection())
-                    {
-                        new MySqlCommand($"DELETE FROM tbl_mesin WHERE kode_mesin='{kode}'", conn).ExecuteNonQuery();
-                        LoadDataMesin();
-                    }
+                    new MySqlCommand($"DELETE FROM tbl_mesin WHERE kode_mesin='{kode}'", conn).ExecuteNonQuery();
+                    LoadDataMesin();
+                    UpdateBadgeNotif(); // Update badge jika ada notif terkait mesin ini ikut terhapus
                 }
-                catch (Exception ex) { MessageBox.Show("Gagal menghapus: " + ex.Message, "Error Database", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
         }
 
         // ==========================================
-        // 5. FITUR TIMER & SIMULASI (DENGAN STORED PROCEDURE)
+        // 5. FITUR TIMER & SIMULASI
         // ==========================================
         private void SetupTimer()
         {
             timerSimulasi = new System.Windows.Forms.Timer();
-            timerSimulasi.Interval = 1000; // 1 detik
+            timerSimulasi.Interval = 1000; 
             timerSimulasi.Tick += Timer_Tick; 
         }
 
@@ -254,19 +250,19 @@ namespace AssesmentIndofoodNet
             DataTable dt = (DataTable)dgvMesin.DataSource;
             if (dt == null) return;
 
-            // Buka satu koneksi saja per detik untuk eksekusi Stored Procedure
+            bool isThereNewNotif = false; // Deteksi jika ada notif baru masuk
+
             using (MySqlConnection conn = dbConn.GetConnection())
             {
                 foreach (DataRow row in dt.Rows)
                 {
                     int currentRh = Convert.ToInt32(row["RH (jam)"]);
                     currentRh += 1; 
-                    row["RH (jam)"] = currentRh; // Update UI langsung
+                    row["RH (jam)"] = currentRh; 
 
                     string kode = row["Kode"].ToString();
                     string nama = row["Nama"].ToString();
 
-                    // --- Memanggil Stored Procedure di MySQL ---
                     try
                     {
                         MySqlCommand cmd = new MySqlCommand("sp_cek_jadwal_maintenance", conn);
@@ -275,25 +271,30 @@ namespace AssesmentIndofoodNet
                         cmd.Parameters.AddWithValue("@p_running_hour", currentRh);
                         cmd.ExecuteNonQuery();
                     }
-                    catch { /* Silent Error agar simulasi tidak putus */ }
+                    catch { }
 
-                    // --- Update Layar/UI Saja (Notifikasi & Status) ---
                     if (currentRh > 0)
                     {
-                        if (currentRh % 2000 == 0)
+                        if (currentRh % 2000 == 0) {
                             UpdateStatusLayar(row, nama, "[!!] Critical", $"[Critical] {nama} perlu Maintenance Berat ({currentRh} jam)");
-                        else if (currentRh % 1000 == 0)
+                            isThereNewNotif = true;
+                        } else if (currentRh % 1000 == 0) {
                             UpdateStatusLayar(row, nama, "[!] Warning", $"[Warning] {nama} perlu Maintenance Medium ({currentRh} jam)");
-                        else if (currentRh % 100 == 0)
+                            isThereNewNotif = true;
+                        } else if (currentRh % 100 == 0) {
                             UpdateStatusLayar(row, nama, "[!] Maintenance", $"[Warning] {nama} perlu Maintenance Ringan ({currentRh} jam)");
+                            isThereNewNotif = true;
+                        }
                     }
                 }
             }
 
-            // Segarkan Tampilan Layar
             dgvMesin.Refresh(); 
             UpdateWarnaGrid();  
             UpdateStatistik();  
+            
+            // Jika ada notifikasi masuk di detik ini, hitung ulang badgenya
+            if (isThereNewNotif) UpdateBadgeNotif(); 
         }
 
         // ==========================================
