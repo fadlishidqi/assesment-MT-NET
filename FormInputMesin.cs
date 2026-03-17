@@ -31,7 +31,7 @@ namespace AssesmentIndofoodNet
 
             Label lblFlavor = new Label() { Text = "Flavor:", Location = new Point(20, 100), AutoSize = true };
             cbFlavor = new ComboBox() { Location = new Point(120, 100), Width = 180 };
-            cbFlavor.Items.AddRange(new string[] { "Flavor A", "Flavor B", "Flavor C" });
+            cbFlavor.Items.AddRange(["Flavor A", "Flavor B", "Flavor C"]);
             cbFlavor.SelectedItem = string.IsNullOrEmpty(flavor) ? "Flavor A" : flavor;
 
             Label lblOp = new Label() { Text = "Operator:", Location = new Point(20, 140), AutoSize = true };

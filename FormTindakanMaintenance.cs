@@ -81,7 +81,7 @@ namespace AssesmentIndofoodNet
 
                     if (result != null)
                     {
-                        string[] listTindakan = result.ToString().Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                        string[] listTindakan = result.ToString().Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
                         foreach (string t in listTindakan)
                         {
                             clbTindakan.Items.Add(t.Trim());

@@ -38,8 +38,10 @@ namespace AssesmentIndofoodNet
         {
             using (MySqlConnection conn = _dbConn.GetConnection())
             {
-                MySqlCommand cmd = new MySqlCommand("sp_cek_jadwal_maintenance", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlCommand cmd = new MySqlCommand("sp_cek_jadwal_maintenance", conn)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
                 cmd.Parameters.AddWithValue("@p_kode_mesin", kode);
                 cmd.Parameters.AddWithValue("@p_running_hour", rh);
                 cmd.ExecuteNonQuery();
