@@ -1,7 +1,4 @@
-using System;
 using System.Data;
-using System.Drawing;
-using System.Windows.Forms;
 
 namespace AssesmentIndofoodNet
 {
@@ -13,7 +10,7 @@ namespace AssesmentIndofoodNet
         private ListBox lstNotifikasi;
 
         private System.Windows.Forms.Timer timerSimulasi;
-        private bool isSimulasiBerjalan = false;
+        private bool isSimulasiBerjalan;
         private MesinRepository _repository;
         private MaintenanceService _service;
 
@@ -171,6 +168,8 @@ namespace AssesmentIndofoodNet
         }
         private void Timer_Tick(object sender, EventArgs e)
         {
+            if (!isSimulasiBerjalan) return;
+
             DataTable dt = (DataTable)dgvMesin.DataSource;
             if (dt == null) return;
             bool isThereNewNotif = false;
