@@ -26,3 +26,4 @@ C:\laragon\www\assesment-indofood-net\obj\Debug\net10.0-windows\refint\assesment
 C:\laragon\www\assesment-indofood-net\obj\Debug\net10.0-windows\assesment-indofood-net.pdb
 C:\laragon\www\assesment-indofood-net\obj\Debug\net10.0-windows\assesment-indofood-net.genruntimeconfig.cache
 C:\laragon\www\assesment-indofood-net\obj\Debug\net10.0-windows\ref\assesment-indofood-net.dll
+C:\laragon\www\assesment-indofood-net\obj\Debug\net10.0-windows\assesment-indofood-net.sourcelink.json
