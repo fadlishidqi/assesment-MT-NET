@@ -1,7 +1,5 @@
-using System;
 using System.Data;
 using MySql.Data.MySqlClient;
-using System.Windows.Forms;
 
 namespace AssesmentIndofoodNet
 {
@@ -23,9 +21,7 @@ namespace AssesmentIndofoodNet
             return conn;
         }
 
-        // ==========================================
-        // FITUR AUTO-MIGRATE (TIDAK PERLU KE PHPMYADMIN)
-        // ==========================================
+        // Migration
         public void AutoMigrate()
         {
             using (MySqlConnection conn = GetConnection())
@@ -34,7 +30,6 @@ namespace AssesmentIndofoodNet
 
                 try
                 {
-                    // 1. BUAT TABEL OTOMATIS JIKA BELUM ADA
                     string queryTables = @"
                         CREATE TABLE IF NOT EXISTS tbl_mesin (
                             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -75,7 +70,6 @@ namespace AssesmentIndofoodNet
                     ";
                     new MySqlCommand(queryTables, conn).ExecuteNonQuery();
 
-                    // 2. INSERT DATA DUMMY TINDAKAN JIKA KOSONG
                     int countTindakan = Convert.ToInt32(new MySqlCommand("SELECT COUNT(*) FROM tbl_jenis_tindakan", conn).ExecuteScalar());
                     if (countTindakan == 0)
                     {
@@ -88,7 +82,6 @@ namespace AssesmentIndofoodNet
                         new MySqlCommand(insertTindakan, conn).ExecuteNonQuery();
                     }
 
-                    // 3. INSERT 10 DATA MESIN AWAL JIKA KOSONG
                     int countMesin = Convert.ToInt32(new MySqlCommand("SELECT COUNT(*) FROM tbl_mesin", conn).ExecuteScalar());
                     if (countMesin == 0)
                     {
@@ -108,7 +101,6 @@ namespace AssesmentIndofoodNet
                         new MySqlCommand(insertMesin, conn).ExecuteNonQuery();
                     }
 
-                    // 4. BUAT STORED PROCEDURE OTOMATIS
                     new MySqlCommand("DROP PROCEDURE IF EXISTS sp_cek_jadwal_maintenance;", conn).ExecuteNonQuery();
                     string createSp = @"
                         CREATE PROCEDURE sp_cek_jadwal_maintenance(

@@ -1,6 +1,3 @@
-using System;
-using System.Windows.Forms;
-
 namespace AssesmentIndofoodNet
 {
     internal static class Program

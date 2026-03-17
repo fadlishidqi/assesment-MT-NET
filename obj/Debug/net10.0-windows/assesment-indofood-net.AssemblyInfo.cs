@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("assesment-indofood-net")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3609880068c52f41818d06183061276dc535ab95")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ffc4aa36ea3202521897ef190f3d5dfd92a397f4")]
 [assembly: System.Reflection.AssemblyProductAttribute("assesment-indofood-net")]
 [assembly: System.Reflection.AssemblyTitleAttribute("assesment-indofood-net")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
